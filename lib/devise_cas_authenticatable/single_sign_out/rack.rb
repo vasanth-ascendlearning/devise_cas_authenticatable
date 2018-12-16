@@ -30,7 +30,11 @@ module DeviseCasAuthenticatable
 
         if cas_ticket_store
           Rails.logger.info "Storing Session ID #{session_id} for ticket #{session[CAS_LAST_TICKET]}"
-          ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy.store_session_id_for_index(session[CAS_LAST_TICKET], session_id)
+          strategy = ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy
+          strategy.store_session_id_for_index(env,
+                                              session[CAS_LAST_TICKET],
+                                              session_id,
+                                              { expire_after: nil})
           session[CAS_TICKET_STORE] = false
         end
       end

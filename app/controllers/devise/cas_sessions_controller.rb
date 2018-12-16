@@ -40,7 +40,8 @@ class Devise::CasSessionsController < Devise::SessionsController
       session_index = read_session_index
       if session_index
         logger.debug "Intercepted single-sign-out request for CAS session #{session_index}."
-        session_id = ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy.find_session_id_by_index(session_index)
+        strategy = ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy
+        session_id = strategy.find_session_id_by_index(request.env, session_index)
         if session_id
           logger.debug "Found Session ID #{session_id} with index key #{session_index}"
           destroy_cas_session(session_index, session_id)
@@ -69,10 +70,10 @@ class Devise::CasSessionsController < Devise::SessionsController
   end
 
   def destroy_cas_session(session_index, session_id)
-    if destroy_session_by_id(session_id)
+    if destroy_session_by_id(request.env, session_id, drop: true)
       logger.debug "Destroyed session #{session_id} corresponding to service ticket #{session_index}."
     end
-    ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy.delete_session_index(session_index)
+    ::DeviseCasAuthenticatable::SingleSignOut::Strategies.current_strategy.delete_session_index(request.env, session_index, drop: true)
   end
 
   def cas_login_url
